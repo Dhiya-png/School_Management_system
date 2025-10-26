@@ -1,35 +1,37 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api";
 
 export default function TeacherLogin() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
-  const navigate = useNavigate(); // Add this
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/class/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      // First get CSRF token
+      await API.get("csrf/");
+      
+      // Then login
+      const res = await API.post("login/", form);
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage(data.message);
-        // Redirect to teacher dashboard
-        navigate("/teacher-dashboard");
-      } else {
-        setMessage(data.error || "Login failed");
+      if (res.status === 200) {
+        setMessage("Login successful!");
+        setTimeout(() => {
+          navigate("/teacher-dashboard");
+        }, 500);
       }
     } catch (err) {
       console.error("Login error:", err);
-      setMessage("Login failed. Server not reachable.");
+      setMessage(err.response?.data?.error || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,11 +39,24 @@ export default function TeacherLogin() {
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h2>Teacher Login</h2>
       <form onSubmit={handleSubmit}>
-        <input name="username" placeholder="Username" onChange={handleChange} /><br /><br />
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} /><br /><br />
-        <button type="submit">Login</button>
+        <input 
+          name="username" 
+          placeholder="Username" 
+          onChange={handleChange}
+          required 
+        /><br /><br />
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="Password" 
+          onChange={handleChange}
+          required 
+        /><br /><br />
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p style={{ color: message.includes("successful") ? "green" : "red" }}>{message}</p>}
     </div>
   );
 }

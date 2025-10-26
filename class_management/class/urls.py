@@ -1,12 +1,20 @@
-# urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import TeacherRegisterView, StudentRegisterView, AttendanceViewSet, login_view, logout_view, StudentAttendanceView
+from .views import (
+    TeacherRegisterView, 
+    StudentRegisterView, 
+    AttendanceViewSet, 
+    login_view, 
+    logout_view, 
+    StudentAttendanceView,
+    get_csrf_token
+)
 
 router = DefaultRouter()
 router.register('attendance', AttendanceViewSet, basename='attendance')
 
 urlpatterns = [
+    path('csrf/', get_csrf_token, name='csrf'),
     path('teacher/register/', TeacherRegisterView.as_view(), name='teacher-register'),
     path('student/register/', StudentRegisterView.as_view(), name='student-register'),
     path('login/', login_view, name='login'),

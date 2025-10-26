@@ -53,7 +53,26 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF cookie
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Session Settings
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = True
 
 ROOT_URLCONF = 'class_management.urls'
 
@@ -128,10 +147,14 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny', 
-    ]
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
 }
+
 AUTH_USER_MODEL = 'class.CustomUser'
