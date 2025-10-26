@@ -6,7 +6,10 @@ const StudentTable = ({ students, onMark }) => {
       <thead>
         <tr>
           <th>ID</th>
-          <th>Student</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Roll No</th>
+          <th>Today Attendance</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -14,7 +17,10 @@ const StudentTable = ({ students, onMark }) => {
         {students.map((s) => (
           <tr key={s.id}>
             <td>{s.id}</td>
-            <td>{s.user.username}</td>
+            <td>{s.name}</td>
+            <td>{s.email}</td>
+            <td>{s.roll_no}</td>
+            <td>{s.today_status || "Not Marked"}</td>
             <td>
               <button onClick={() => onMark(s.id, "present")}>✅ Present</button>
               <button onClick={() => onMark(s.id, "absent")}>❌ Absent</button>

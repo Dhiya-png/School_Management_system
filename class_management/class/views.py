@@ -50,6 +50,7 @@ def logout_view(request):
 # Attendance CRUD
 # -------------------------------
 # ------------------------------- Teacher Dashboard -------------------------------
+
 class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
@@ -57,18 +58,12 @@ class AttendanceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='students')
     def list_students(self, request):
-        """
-        Teacher dashboard: list all students
-        """
         students = Student.objects.all()
         serializer = SimpleStudentSerializer(students, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='mark')
     def mark_attendance(self, request):
-        """
-        Teacher marks attendance for a student
-        """
         student_id = request.data.get('student_id')
         status_val = request.data.get('status')  # "present" or "absent"
 
@@ -80,12 +75,14 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         except Student.DoesNotExist:
             return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Mark attendance for today
         attendance, created = Attendance.objects.get_or_create(student=student, date=date.today())
         attendance.status = status_val
         attendance.save()
 
         serializer = AttendanceSerializer(attendance)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 # ------------------------------- Student Dashboard -------------------------------
 class StudentAttendanceView(generics.ListAPIView):

@@ -1,4 +1,3 @@
-// src/components/AttendanceTable.jsx
 import React from "react";
 
 const AttendanceTable = ({ attendance }) => {
