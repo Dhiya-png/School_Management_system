@@ -1,58 +1,23 @@
-// src/pages/TeacherDashboard.jsx
 import React, { useEffect, useState } from "react";
 import API from "../api";
-import StudentTable from "../components/StudentTable";
 
-const TeacherDashboard = () => {
+export default function TeacherDashboard() {
   const [students, setStudents] = useState([]);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchStudents = async () => {
-    setError(null);
     try {
-      const res = await API.get("attendance/students/"); // resolves to /class/attendance/students/
-      console.log("API response (attendance/students):", res);
-
-      // If your DRF view uses pagination it may return { results: [...] }
-      let data = res.data;
-      if (data && data.results) data = data.results;
-
-      // Defensive: ensure it's an array
-      if (!Array.isArray(data)) {
-        console.error("students response is not an array:", data);
-        setError("Unexpected response format from server. Check browser console.");
-        setStudents([]);
-        return;
-      }
-
-      const studentsWithStatus = data.map((s) => ({
-        ...s,
-        today_status: s.today_status ?? "Not Marked",
-      }));
-      setStudents(studentsWithStatus);
+      setLoading(true);
+      const response = await API.get("attendance/students/"); 
+      console.log("Students:", response.data);
+      setStudents(response.data);
+      setError(""); // Clear any previous errors
     } catch (err) {
       console.error("Error fetching students:", err);
-      // show the HTTP response body if available
-      if (err.response) {
-        console.error("Server response data:", err.response.data);
-        setError(`Server error: ${err.response.status} ${JSON.stringify(err.response.data)}`);
-      } else {
-        setError("Network or CORS error. See console for details.");
-      }
-      setStudents([]);
-    }
-  };
-
-  const markAttendance = async (studentId, status) => {
-    setError(null);
-    try {
-      const res = await API.post("attendance/mark/", { student_id: studentId, status });
-      console.log("Marked attendance response:", res);
-      fetchStudents(); // refresh
-    } catch (err) {
-      console.error("Error marking attendance:", err);
-      if (err.response) setError(`Mark error: ${err.response.status} ${JSON.stringify(err.response.data)}`);
-      else setError("Network/CORS error while marking attendance.");
+      setError("Failed to fetch students. Make sure you are logged in as teacher.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,28 +25,81 @@ const TeacherDashboard = () => {
     fetchStudents();
   }, []);
 
+  const handleMarkAttendance = async (studentId, status) => {
+    try {
+      const res = await API.post("attendance/mark/", {
+        student_id: studentId,
+        status: status,
+      });
+      console.log("Marked attendance:", res.data);
+      alert(`Attendance marked as ${status}!`);
+      fetchStudents(); // refresh list
+    } catch (err) {
+      console.error("Error marking attendance:", err);
+      alert("Failed to mark attendance.");
+    }
+  };
+
+  if (loading) return <div style={{ padding: "20px" }}>Loading students...</div>;
+  if (error) return <div style={{ padding: "20px", color: "red" }}>{error}</div>;
+
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: "20px" }}>
       <h2>Teacher Dashboard</h2>
-      <p>View students and mark attendance for today.</p>
-
-      {error && (
-        <div style={{ background: "#ffdede", padding: 10, marginBottom: 12 }}>
-          <strong>Error:</strong> {error}
-        </div>
+      <p>Total Students: {students.length}</p>
+      
+      {students.length === 0 ? (
+        <p>No students found.</p>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+          <thead>
+            <tr style={{ borderBottom: "2px solid #333" }}>
+              <th style={{ padding: "10px", textAlign: "left" }}>ID</th>
+              <th style={{ padding: "10px", textAlign: "left" }}>Name</th>
+              <th style={{ padding: "10px", textAlign: "left" }}>Email</th>
+              <th style={{ padding: "10px", textAlign: "left" }}>Roll No</th>
+              <th style={{ padding: "10px", textAlign: "left" }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((s) => (
+              <tr key={s.id} style={{ borderBottom: "1px solid #ddd" }}>
+                <td style={{ padding: "10px" }}>{s.id}</td>
+                <td style={{ padding: "10px" }}>{s.name}</td>
+                <td style={{ padding: "10px" }}>{s.email}</td>
+                <td style={{ padding: "10px" }}>{s.roll_no || "-"}</td>
+                <td style={{ padding: "10px" }}>
+                  <button
+                    onClick={() => handleMarkAttendance(s.id, "present")}
+                    style={{ 
+                      marginRight: "5px", 
+                      padding: "5px 10px",
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Present
+                  </button>
+                  <button 
+                    onClick={() => handleMarkAttendance(s.id, "absent")}
+                    style={{ 
+                      padding: "5px 10px",
+                      backgroundColor: "#f44336",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Absent
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
-
-      <StudentTable students={students} onMark={markAttendance} />
-
-      {/* Debug output - remove later */}
-      <div style={{ marginTop: 20 }}>
-        <h3>Debug: raw student data</h3>
-        <pre style={{ maxHeight: 300, overflow: "auto", background: "#f5f5f5", padding: 10 }}>
-          {JSON.stringify(students, null, 2)}
-        </pre>
-      </div>
     </div>
   );
-};
-
-export default TeacherDashboard;
+}

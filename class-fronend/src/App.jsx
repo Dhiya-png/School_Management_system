@@ -8,7 +8,7 @@ import StudentRegister from "./pages/StudentRegister";
 import TeacherLogin from "./pages/TeacherLogin";
 import StudentLogin from "./pages/StudentLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
-import StudentAttendance from "./pages/StudentAttendance"; // <-- new page
+import StudentAttendance from "./pages/StudentAttendance"; 
 import AttendanceTable from "./components/AttendanceTable";
 import StudentTable from "./components/StudentTable";
 
